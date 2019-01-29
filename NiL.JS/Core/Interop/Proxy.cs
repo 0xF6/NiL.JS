@@ -412,8 +412,21 @@ namespace NiL.JS.Core.Interop
             return result;
         }
 
-        internal JSValue proxyMember(bool forWrite, IList<MemberInfo> m)
+        internal JSValue proxyMember(bool forWrite, IList<MemberInfo> m2)
         {
+            // UNITY - PATH
+            var m = new List<MemberInfo>();
+
+            foreach (var info in m2)
+            {
+                var bs = info as MethodBase;
+                if(bs == null)
+                    m.Add(info);
+                else if(!bs.IsGenericMethod)
+                    m.Add(info);
+            }
+            // END UNITY PATH
+
             JSValue r = null;
             if (m.Count > 1)
             {
