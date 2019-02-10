@@ -428,6 +428,7 @@ namespace NiL.JS.Core
 
             return res;
         }
+        
 
         /// <summary>
         /// Creates new property with Getter and Setter in the object

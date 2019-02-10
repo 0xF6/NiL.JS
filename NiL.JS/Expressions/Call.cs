@@ -9,6 +9,8 @@ using System.Runtime.CompilerServices;
 
 namespace NiL.JS.Expressions
 {
+    using Extensions;
+
     public enum CallMode
     {
         Regular = 0,
@@ -74,7 +76,7 @@ namespace NiL.JS.Expressions
         public override JSValue Evaluate(Context context)
         {
             var temp = _left.Evaluate(context);
-            JSValue targetObject = context._objectSource;
+            var targetObject = context._objectSource;
             ICallable callable = null;
             Function func = null;
 
@@ -88,13 +90,10 @@ namespace NiL.JS.Expressions
 
                 if (func == null)
                 {
-                    callable = temp._oValue as ICallable;
-                    if (callable == null)
-                        callable = temp.Value as ICallable;
+                    callable = temp._oValue as ICallable ?? temp.Value as ICallable;
                     if (callable == null)
                     {
-                        var typeProxy = temp.Value as Proxy;
-                        if (typeProxy != null)
+                        if (temp.Value is Proxy typeProxy)
                             callable = typeProxy.PrototypeInstance as ICallable;
                     }
                 }
@@ -102,20 +101,32 @@ namespace NiL.JS.Expressions
 
             if (callable == null)
             {
-                for (int i = 0; i < this._arguments.Length; i++)
+                foreach (var t in _arguments)
                 {
                     context._objectSource = null;
-                    this._arguments[i].Evaluate(context);
+                    t.Evaluate(context);
                 }
 
                 context._objectSource = null;
 
-                // Аргументы должны быть вычислены даже если функция не существует.
-                ExceptionHelper.ThrowTypeError(_left.ToString() + " is not a function");
 
+                if (targetObject.Is<Function>())
+                    ExceptionHelper.ThrowTypeError($"'{_left.LeftOperand}' is a function, '{_left}' is not defined.");
+                else
+                {
+                    if(temp.ValueType == JSValueType.NotExistsInObject || temp.ValueType == JSValueType.NotExists)
+                        ExceptionHelper.ThrowTypeError($"'{((Property)_left).FieldName}' not found in '{_left.LeftOperand}'");
+                    if (temp.IsNull)
+                        ExceptionHelper.ThrowTypeError($"{((Property)_left).FieldName} is null in '{_left.LeftOperand}'");
+                    if (temp.Exists && temp.ValueType == JSValueType.Undefined)
+                        ExceptionHelper.ThrowTypeError($"{((Property)_left).FieldName} has type 'UNDEFINED' in '{_left.LeftOperand}'");
+                    ExceptionHelper.ThrowTypeError($"'<{temp.ValueType}>{((Property)_left).FieldName}' is not a function.");
+                }
+                
                 return null;
             }
-            else if (func == null)
+
+            if (func == null)
             {
                 checkStack();
                 Context.CurrentGlobalContext._callDepth++;
@@ -124,13 +135,9 @@ namespace NiL.JS.Expressions
                     switch (_callMode)
                     {
                         case CallMode.Construct:
-                            {
-                                return callable.Construct(Tools.CreateArguments(_arguments, context));
-                            }
+                            return callable.Construct(Tools.CreateArguments(_arguments, context));
                         case CallMode.Super:
-                            {
-                                return callable.Construct(targetObject, Tools.CreateArguments(_arguments, context));
-                            }
+                            return callable.Construct(targetObject, Tools.CreateArguments(_arguments, context));
                         default:
                             return callable.Call(targetObject, Tools.CreateArguments(_arguments, context));
                     }
@@ -140,39 +147,37 @@ namespace NiL.JS.Expressions
                     Context.CurrentGlobalContext._callDepth--;
                 }
             }
-            else
+
+            if (allowTCO
+                && _callMode == 0
+                && (func._functionDefinition.kind != FunctionKind.Generator)
+                && (func._functionDefinition.kind != FunctionKind.MethodGenerator)
+                && (func._functionDefinition.kind != FunctionKind.AnonymousGenerator)
+                && context._owner != null
+                && func == context._owner._oValue)
             {
-                if (allowTCO
-                    && _callMode == 0
-                    && (func._functionDefinition.kind != FunctionKind.Generator)
-                    && (func._functionDefinition.kind != FunctionKind.MethodGenerator)
-                    && (func._functionDefinition.kind != FunctionKind.AnonymousGenerator)
-                    && context._owner != null
-                    && func == context._owner._oValue)
-                {
-                    tailCall(context, func);
-                    context._objectSource = targetObject;
-                    return JSValue.undefined;
-                }
-                else
-                    context._objectSource = null;
+                tailCall(context, func);
+                context._objectSource = targetObject;
+                return JSValue.undefined;
+            }
 
-                checkStack();
-                Context.CurrentGlobalContext._callDepth++;
-                try
-                {
-                    if (_callMode == CallMode.Construct)
-                        targetObject = null;
+            context._objectSource = null;
 
-                    if ((temp._attributes & JSValueAttributesInternal.Eval) != 0)
-                        return callEval(context);
+            checkStack();
+            Context.CurrentGlobalContext._callDepth++;
+            try
+            {
+                if (_callMode == CallMode.Construct)
+                    targetObject = null;
 
-                    return func.InternalInvoke(targetObject, _arguments, context, withSpread, _callMode != 0);
-                }
-                finally
-                {
-                    Context.CurrentGlobalContext._callDepth--;
-                }
+                if ((temp._attributes & JSValueAttributesInternal.Eval) != 0)
+                    return callEval(context);
+
+                return func.InternalInvoke(targetObject, _arguments, context, withSpread, _callMode != 0);
+            }
+            finally
+            {
+                Context.CurrentGlobalContext._callDepth--;
             }
         }
 

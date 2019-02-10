@@ -10,24 +10,31 @@ using System.Diagnostics;
 
 namespace NiL.JS
 {
-    internal static class ExceptionHelper
+    public delegate void JSErrorEvent(JSException js);
+    public static class ExceptionHelper
     {
+        public static event JSErrorEvent onError; 
+
+
         /// <exception cref="NiL.JS.Core.JSException">
         /// </exception>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [DebuggerStepThrough]
         internal static void Throw(Error error)
         {
-            throw new JSException(error);
+            if(onError == null)
+                throw new JSException(error);
+            else
+                onError.Invoke(new JSException(error));
         }
 
         /// <exception cref="NiL.JS.Core.JSException">
         /// </exception>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [DebuggerStepThrough]
-        internal static void Throw(Error error, CodeNode exceptionMaker, string code)
+        internal static void Throw(Error error, CodeNode exceptionMaker, string code, string moduleName)
         {
-            throw new JSException(error, exceptionMaker, code);
+            throw new JSException(error, exceptionMaker, code, moduleName);
         }
 
         /// <exception cref="NiL.JS.Core.JSException">
@@ -63,7 +70,7 @@ namespace NiL.JS
         [DebuggerStepThrough]
         internal static void ThrowVariableIsNotDefined(string variableName, string code, int position, int length, CodeNode exceptionMaker)
         {
-            Throw(new ReferenceError(string.Format(Strings.VariableNotDefined, variableName)), exceptionMaker, code);
+            Throw(new ReferenceError(string.Format(Strings.VariableNotDefined, variableName)), exceptionMaker, code ,"");
         }
 
         /// <exception cref="NiL.JS.Core.JSException">
@@ -72,7 +79,7 @@ namespace NiL.JS
         [DebuggerStepThrough]
         internal static void ThrowVariableIsNotDefined(string variableName, CodeNode exceptionMaker)
         {
-            Throw(new ReferenceError(string.Format(Strings.VariableNotDefined, variableName)), exceptionMaker, null);
+            Throw(new ReferenceError(string.Format(Strings.VariableNotDefined, variableName)), exceptionMaker, null, "");
         }
 
         /// <exception cref="NiL.JS.Core.JSException">

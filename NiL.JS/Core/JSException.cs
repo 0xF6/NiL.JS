@@ -16,13 +16,14 @@ namespace NiL.JS.Core
         public CodeNode ExceptionMaker { get; }
         public string Code { get; internal set; }
         public CodeCoordinates CodeCoordinates { get; internal set; }
+        private string module;
 
         public JSException(Error data)
         {
             Error = Context.CurrentGlobalContext.ProxyValue(data);
         }
 
-        public JSException(Error data, CodeNode exceptionMaker, string code)
+        public JSException(Error data, CodeNode exceptionMaker, string code, string moduleName)
         {
             Error = Context.CurrentGlobalContext.ProxyValue(data);
             ExceptionMaker = exceptionMaker;
@@ -30,6 +31,8 @@ namespace NiL.JS.Core
             if (code != null) {
                 CodeCoordinates = CodeCoordinates.FromTextPosition(code, exceptionMaker.Position, exceptionMaker.Length);
             }
+
+            module = moduleName;
         }
 
         public JSException(JSValue data)
@@ -53,7 +56,7 @@ namespace NiL.JS.Core
         {
             get
             {
-                var result = CodeCoordinates != null ? " at " + CodeCoordinates : "";
+                var result = CodeCoordinates != null ? $" at {module}" + CodeCoordinates : "";
                 if (Error._oValue is Error)
                 {
                     var n = Error.GetProperty("name");

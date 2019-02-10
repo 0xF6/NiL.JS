@@ -5,13 +5,13 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("NiL.JS")]
-[assembly: AssemblyProduct("NiL.JS")]
+[assembly: AssemblyProduct("Elementary.JS")]
 [assembly: AssemblyDescription("JavaScript engine for .NET")]
-[assembly: AssemblyCompany("NiLProject")]
-[assembly: AssemblyCopyright("Copyright © NiLProject 2013-2017")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyCopyright("(C) NiLProject 2013-2017, (C) Yuuki Wesp 2019")]
 [assembly: AssemblyTrademark("NiL.JS")]
-[assembly: AssemblyVersion(InternalInfo.Version)]
-[assembly: AssemblyFileVersion(InternalInfo.Version)]
+[assembly: AssemblyVersion("2.6.1204")]
+[assembly: AssemblyFileVersion("2.6.1204")]
 [assembly: NeutralResourcesLanguage("en-US")]
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(true)]

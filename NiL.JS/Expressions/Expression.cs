@@ -15,28 +15,16 @@ namespace NiL.JS.Expressions
         internal JSValue _tempContainer;
         internal CodeContext _codeContext;
 
-        internal protected virtual PredictedType ResultType
-        {
-            get
-            {
-                return PredictedType.Unknown;
-            }
-        }
+        protected internal virtual PredictedType ResultType => PredictedType.Unknown;
 
-        internal virtual bool ResultInTempContainer
-        {
-            get { return false; }
-        }
+        internal virtual bool ResultInTempContainer => false;
 
-        public Expression LeftOperand { get { return _left; } }
-        public Expression RightOperand { get { return _right; } }
+        public Expression LeftOperand => _left;
+        public Expression RightOperand => _right;
 
         public override bool Eliminated
         {
-            get
-            {
-                return base.Eliminated;
-            }
+            get => base.Eliminated;
             internal set
             {
                 if (_left != null)
@@ -47,25 +35,15 @@ namespace NiL.JS.Expressions
             }
         }
 
-        protected internal virtual bool LValueModifier { get { return false; } }
+        protected internal virtual bool LValueModifier => false;
 
-        protected internal virtual bool ContextIndependent
-        {
-            get
-            {
-                return (_left == null || _left.ContextIndependent)
-                    && (_right == null || _right.ContextIndependent);
-            }
-        }
+        protected internal virtual bool ContextIndependent =>
+            (_left == null || _left.ContextIndependent)
+            && (_right == null || _right.ContextIndependent);
 
-        protected internal virtual bool NeedDecompose
-        {
-            get
-            {
-                return (_left != null && _left.NeedDecompose)
-                    || (_right != null && _right.NeedDecompose);
-            }
-        }
+        protected internal virtual bool NeedDecompose =>
+            (_left != null && _left.NeedDecompose)
+            || (_right != null && _right.NeedDecompose);
 
         protected Expression()
         {
