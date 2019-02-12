@@ -30,6 +30,7 @@ namespace NiL.JS.Core.Interop
         {
             get
             {
+                return null;
 #if (PORTABLE || NETCORE)
                 if (_prototypeInstance == null && IsInstancePrototype && !_hostedType.GetTypeInfo().IsAbstract)
                 {
