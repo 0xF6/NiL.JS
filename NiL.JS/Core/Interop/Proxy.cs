@@ -30,7 +30,6 @@ namespace NiL.JS.Core.Interop
         {
             get
             {
-                return null;
 #if (PORTABLE || NETCORE)
                 if (_prototypeInstance == null && IsInstancePrototype && !_hostedType.GetTypeInfo().IsAbstract)
                 {
@@ -60,6 +59,9 @@ namespace NiL.JS.Core.Interop
                             }
                             else
                             {
+                                //
+                                var deny = _instanceCtor.DeclaringType.IsDefined(typeof(ProxyIgnoreAttribute), true);
+                                if (deny) return null;
                                 var instance = _instanceCtor.Invoke(null);
                                 _prototypeInstance = new ObjectWrapper(instance, this)
                                 {
